@@ -1,0 +1,99 @@
+---
+title: "Task1"
+author: "Pavitra Desai"
+date: "12/08/2021"
+output: 
+  html_document:
+    keep_md: yes
+---
+
+# GRIP under The Sparks Foundation - Data Science and Business Analytics
+## Prediction using Supervised ML  
+### **Problem Statement** - Predict the percentage Scores of an student based on the no. of study Hours using Simple Linear Regression
+  
+**Importing necessary Libraries**
+```{r}
+# Uncomment the following to install packages 
+#install.packages("ggplot2")
+#install.packages("caTools")
+library(ggplot2)
+library(caTools)
+```
+  
+**Downloading, understanding and cleaning dataset**  
+Data can be downloaded from http://bit.ly/w-data
+```{r}
+url<-"http://bit.ly/w-data"
+data<-read.csv(file=url)
+head(data)
+dim(data)
+summary(data)
+is.null(data)
+any(is.na(data))
+```
+  Data consists of 25 rows, 2 columns ; Hours of study per day(independent variable) and Score(dependent variable) . 
+  Data is clean with no null or missing values.  
+  
+**Data Visualization**
+```{r}
+plot(data)
+```
+
+Subsetting data into training sets(75%) and testing sets(25%) with split ratio=4/5
+```{r}
+set.seed(100)
+split<-sample.split(data$Hours,SplitRatio = 4/5)
+train<-subset(x=data,split==TRUE)
+test<-subset(x=data,split==FALSE)
+model<-lm(Scores~Hours,train)
+summary(model)
+```
+  Plotting Training set 
+```{r}
+ggplot() +
+  geom_point(aes(x=train$Hours,y=train$Scores),colour="red")+
+  geom_line(aes(x=train$Hours,y=predict(model,train)),colour="green")+
+  ggtitle ("Training set")+
+  xlab("Hours")+
+  ylab("Scores")
+```
+  
+Testing Set Results 
+```{r}
+ggplot() +
+  geom_point(aes(x=test$Hours, y=test$Scores),colour = 'blue') +
+  geom_line (aes( x= train$Hours, y=predict(model,train)),colour = 'green') +
+  ggtitle ('Testing Set') +
+  xlab ('Hours') +
+  ylab ('Scores') 
+```
+   
+  Comparing Actual and Predicted values
+```{r}
+predictions<-predict(model,test)
+new<-cbind(test$Scores,as.integer(predictions))
+colnames(new)<-c("Actual","Predicted")
+new<-as.data.frame(new)
+new
+```
+
+Simple Linear Regression Model to predict unknown values
+```{r}
+linear_model<-lm(formula = Scores~Hours,data)
+plot(data)
+abline(linear_model,col="red")
+test<-data.frame(Hours=9.25)
+result<-predict(linear_model,test)
+points(test,result,col="blue",pch=8)
+```
+```{r , echo=FALSE}
+sprintf("If a student studies for 9.25 hours/day he will Score %f",result)
+```
+  
+**Root Mean Squared Error (RMSE) to measure the model prediction error**
+```{r}
+mse <- mean((new$Actual -new$Predicted)^2)
+rmse <- sqrt(mse)
+rmse
+```
+The lower the RMSE, the better the model.
